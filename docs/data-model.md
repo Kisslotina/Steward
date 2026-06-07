@@ -10,7 +10,7 @@ with `.claude/rules/conventions.md`.
 |---|---|---|
 | Note | Title | captured text |
 | Date | Created time | auto |
-| Type | Select | task · reminder · reference · goal · thought · event · expense · purchase · unsure (set by Steward) |
+| Type | Select | task · reminder · reference · goal · thought · event · review · expense · unsure (set by Steward) |
 | Status | Select | New → Sorted |
 | Target | Text | where it was filed (audit) |
 
@@ -26,8 +26,12 @@ Second capture surface: free-text **Daily notes** on the `Today` page (swept int
 | Projects | Project, Status (Backlog/Active/On hold/Done), Deadline, Summary | → Area, → Goal ; ← Tasks |
 | Tasks | Task, Done, Do date, Priority, Type (Work/Personal), Tag, Assignee, Executor (Me/Auto) | → Project |
 | Content Ideas | Idea, Platform, Status (New/In progress/Drafted/Posted), Notes | → Area (optional) |
-| Reviews | Period (title), Date + text columns: Health/Sport/Career/Work/Money/Family | wide format, no relations |
-| Knowledge / Tech notes | reference facts | create on first `reference` |
+| Knowledge | Title, Notes | → Area (optional) — home for `reference` notes/facts |
+| Reviews | Period (title), Date + text columns: Health/Sport/Career/Work/Money/Family | wide format; `review` notes append to the current period row |
+
+> "Buy X" shopping items are `task`s (Tag=Shopping), not a separate base. Per-user data-source IDs
+> live in `bases.local.json` (git-ignored), written by `bootstrap-notion`; the sort routine reads it
+> instead of querying Notion each run.
 
 **Canonical Area vocabulary:** Career · Health · Sport · Money · Family · Content · Other.
 

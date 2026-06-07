@@ -4,6 +4,7 @@ CLAUDE.local.md
 
 # Personal context — your filled-in profile stays local
 docs/profile.md
+bases.local.json
 
 # Node
 node_modules/
