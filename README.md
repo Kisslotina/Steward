@@ -61,9 +61,16 @@ directly — clone the repo, then point the tool at the folder:
    conventions; `CLAUDE.md`, `.claude/rules/` and `.claude/skills/` are picked up automatically when
    Claude Code runs in this directory.
 
-> **Skills caveat.** `.claude/skills/` auto-load in Claude Code. In Cowork/claude.ai this is less
-> certain — after connecting the folder, verify by asking *"what skills are available?"*. If the
-> skills aren't listed, upload them as a zip via Settings → Features (the documented claude.ai path).
+> **Skills caveat (important).** Claude Code auto-discovers `.claude/skills/` from the project
+> folder. **Cowork / claude.ai does *not*** — folder skills are visible as files but are not
+> registered as runnable skills, so `bootstrap-notion` etc. won't appear in the skills list. Two ways
+> to use them in Cowork:
+> 1. **Just ask** — the assistant can read and follow a skill file directly:
+>    *"Read `.claude/skills/bootstrap-notion/SKILL.md` and follow it."* (It has the folder + connectors.)
+> 2. **Install it** — zip the skill and upload via Settings → Features → Skills:
+>    `cd .claude/skills && zip -r bootstrap-notion.zip bootstrap-notion` (repeat per skill).
+>
+> Verify what's registered by asking *"what skills are available?"*.
 
 ## Reuse / quick start
 
