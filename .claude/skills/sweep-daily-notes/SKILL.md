@@ -12,6 +12,11 @@ FIRST in the sort routine.
 - At the start of an inbox sort run (before sort-inbox).
 - The user asks to collect/ingest Today's notes.
 
+## Step 0 — load the base registry
+Read `bases.local.json` (base name → data-source ID) from the project root to get the **Inbox** ID.
+If it is missing, stop and tell the user to run `bootstrap-notion` first — do not guess or hardcode
+the Inbox ID.
+
 ## Steps
 1. Read the Today page; take Daily-notes lines WITHOUT the "✅ done" mark.
 2. For each new line, create an Inbox record with `Status=New` (the line text → Note).

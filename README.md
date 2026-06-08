@@ -89,6 +89,23 @@ directly — clone the repo, then point the tool at the folder:
 > Skills may need verification in Cowork (see caveat above). Connectors, secrets and the Notion
 > bases are per-user and set up by whoever forks the repo.
 
+## Scheduling the daily sort
+
+A scheduled task should **reference the skills + `bases.local.json`**, never hardcode Notion IDs
+(IDs drift between bootstraps and the run will fail). Recommended task prompt:
+
+```
+Run the Steward inbox sort. Read bases.local.json for data-source IDs (never hardcode IDs;
+if missing, locate the bases under the "Steward" page and save bases.local.json). Then follow,
+in order, .claude/skills/sweep-daily-notes/SKILL.md and .claude/skills/sort-inbox/SKILL.md and
+.claude/rules/*. For each New Inbox row: classify, CREATE the row in the destination base, VERIFY
+it exists, and ONLY THEN set Status=Sorted + Target. Target is an audit label, not a substitute
+for creating the row — never mark Sorted without a verified destination row. Report per entry and totals.
+```
+
+> Why this matters: setting `Status=Sorted` + a `Target` label in Inbox is **not** filing. The
+> routine must create the actual row in the destination base and verify it before marking Sorted.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
