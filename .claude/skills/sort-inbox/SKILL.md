@@ -32,9 +32,11 @@ If a note marks an EXISTING item done (cues: "closed", "finished", "done", names
 3. **Create the actual page/row** in that base's data source (use its ID from the registry) with the
    proper fields. For `review`: find/create the current period row in Reviews and append the text to
    the matching area column. Do not just describe the write — perform it.
-4. **Verify** the new row exists (URL/ID), then set Inbox `Status=Sorted` and
-   `Target="<RealBaseName>/<title>"`. If the write failed, leave Inbox `New` and report the error —
-   never report success for a write that did not happen.
+4. **Verify** the new row exists (it returns a URL/ID), THEN set Inbox `Status=Sorted` and
+   `Target="<RealBaseName>/<title>"`. `Target` is an audit label only — it is NOT a substitute for
+   creating the row. NEVER set `Status=Sorted` for an item whose destination row was not created and
+   verified. If the write failed, leave Inbox `New` and report the error — never report success for a
+   write that did not happen.
 5. External action → enqueue an Outbox row (Handler per taxonomy) instead of acting directly.
 
 ## Rules
