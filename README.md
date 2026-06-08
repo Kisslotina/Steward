@@ -77,7 +77,9 @@ directly — clone the repo, then point the tool at the folder:
 1. Clone this repo and point Cowork (connect folder) or Claude Code at it.
 2. Connect the Notion connector, then run the **`bootstrap-notion`** skill to create all bases,
    relations and views automatically (or create them manually per
-   [`docs/data-model.md`](docs/data-model.md)). Bootstrap also writes `bases.local.json` (base name →
+   [`docs/data-model.md`](docs/data-model.md)). Tell it to put the **Steward** page in your
+   **Private** space or an **existing** teamspace — don't create a new teamspace (Notion auto-adds a
+   "Teamspace Home" page to new teamspaces). Bootstrap also writes `bases.local.json` (base name →
    data-source ID; git-ignored) — see [`bases.local.example.json`](bases.local.example.json). The
    sort routine reads this registry instead of querying Notion each run.
 3. Copy `docs/profile.template.md` → `docs/profile.md` and fill in your context (stays local).

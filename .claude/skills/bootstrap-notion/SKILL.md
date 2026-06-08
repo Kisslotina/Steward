@@ -10,11 +10,13 @@ data-source IDs. Schema reference: `docs/data-model.md`; names/casing: `.claude/
 
 ## Prerequisites
 - Notion connector connected, able to create databases/pages.
-- Ask the user which **parent page or teamspace** to create everything under. Offer to create a
-  page named **Steward** as the container.
+- Ask the user **where** to create everything, and create the **Steward** page directly there:
+  - their **Private** space (cleanest — pass no parent / a private page), or
+  - an **existing** teamspace/page they name.
+- **Do NOT create a new teamspace.** Notion auto-adds a default "Teamspace Home" page to every new
+  teamspace, which we don't want. Always place Steward under an *existing* location.
 - Create EXACTLY one container page (**Steward**) and the 10 databases inside it. Do NOT create any
-  other pages, sections, or sub-pages. ("Teamspace Home" is Notion's own default teamspace page — it
-  is not created here; the user can delete it manually if unwanted.)
+  other pages, sections, or sub-pages.
 
 ## Order (relations need their targets to exist first)
 Create each as a database under the parent; put the emoji in the title (e.g. `📥 Inbox`).
