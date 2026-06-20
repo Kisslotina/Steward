@@ -23,8 +23,9 @@ Create each as a database under the parent; put the emoji in the title (e.g. `�
 
 1. **📥 Inbox** — `Note` (title), `Status` (select: New, Sorted), `Type` (select: task, reminder,
    reference, goal, idea, event, review, expense, unsure), `Target` (text). Date = created time.
-2. **🔁 Areas DB** — `Area` (title), `Notes` (text). Add rows:
-   Career, Health, Sport, Money, Family, Content, Other.
+2. **🔁 Areas DB** — `Area` (title), `Notes` (text). Add rows, each with an emoji in the title text
+   (emoji + space + name):
+   💼 Career, 🩺 Health, 🏃 Sport, 💰 Money, 👨‍👩‍👧 Family, ✍️ Content, 📦 Other.
 3. **🎯 Goals** — `Goal` (title), `Horizon` (select: Yearly, Short-term), `Target date` (date),
    `Status` (select: Not started, In progress, Done), `Notes` (text),
    `Area` RELATION → Areas DB (two-way "Goals").
@@ -37,9 +38,9 @@ Create each as a database under the parent; put the emoji in the title (e.g. `�
    `Executor` (select: Me, Auto (Steward)), `Project` RELATION → Projects (two-way "Tasks").
    Add two table views: **Work** (filter Type=Work), **Personal** (filter Type=Personal).
 6. **💡 Ideas** — `Idea` (title), `Type` (select: Content, Startup, Other),
-   `Platform` (select: Telegram, X, LinkedIn), `Status` (select: New, In progress, Drafted, Posted),
+   `Status` (select: New, In progress, Drafted, Posted),
    `Notes` (text), `Area` RELATION → Areas DB (two-way "Ideas"; optional).
-   (`Type` is the idea subtype; `Platform` / `Drafted` / `Posted` are mainly for Type=Content.)
+   (`Type` is the idea subtype; `Drafted` / `Posted` are mainly for Type=Content.)
 7. **📚 Knowledge** — `Title` (title), `Notes` (text),
    `Area` RELATION → Areas DB (two-way "Knowledge"; optional). Home for `reference` notes/facts.
 8. **🗒️ Reviews** — `Period` (title), `Date` (date), text columns:

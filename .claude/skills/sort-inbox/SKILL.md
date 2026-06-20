@@ -66,7 +66,8 @@ Do the following instead.
 ## Step 2 — completion vs new
 If a note marks an EXISTING item done (cues: "closed", "finished", "done", names a known task/goal):
 - one confident match → set it Done; write to the audit log; enqueue an Outbox
-  `{Type:notify, Handler:Concierge Gateway, Status:Queued}`; set Inbox `Target="closed: …"`.
+  `{Type:notify, Handler:Concierge Gateway, Status:Queued}`; then update the Inbox row:
+  set `Type=review` (or the closest matching type), `Status=Sorted`, and `Target="closed: …"`.
 - no/ambiguous match → Not Recognized. Never close on a weak match.
 
 ## Step 3 — classify & FILE new items (actually write the row)
@@ -76,7 +77,7 @@ If a note marks an EXISTING item done (cues: "closed", "finished", "done", names
 2. Map it to a base in the registry (Step 0). If none → Not Recognized.
    For `idea` → **Ideas**: also set the `Ideas.Type` subtype on the new row —
    `Content` (post/social/blog idea), `Startup` (business/venture/product concept), or `Other`.
-   `Platform` and the `Drafted/Posted` statuses apply mainly to `Type=Content`; leave blank otherwise.
+   The `Drafted/Posted` statuses apply mainly to `Type=Content`; leave blank otherwise.
 3. **Create the actual page/row** in that base's data source. Pass the destination base's
    **`data_source_id` from `bases.local.json`** as the parent, i.e.
    `parent: { type: "data_source_id", data_source_id: "<id-from-registry>" }`
@@ -85,17 +86,27 @@ If a note marks an EXISTING item done (cues: "closed", "finished", "done", names
    Use the property names from the data source schema (fetch the collection if unsure).
    For `review`: find/create the current period row in Reviews and append the text to the matching
    area column. Do not just describe the write — perform it.
-4. **Verify** the new row exists (it returns a URL/ID), THEN set Inbox `Status=Sorted` and
-   `Target="<RealBaseName>/<title>"`. `Target` is an audit label only — it is NOT a substitute for
-   creating the row. NEVER set `Status=Sorted` for an item whose destination row was not created and
-   verified. If the write failed, leave Inbox `New` and report the error — never report success for a
-   write that did not happen.
+   **Area (bases that have an Area relation — Goals, Ideas, Knowledge, Projects):** always set `Area`.
+   Match the note to a canonical Area (Career · Health · Sport · Money · Family · Content · Other) by
+   meaning, using only an exact, obvious match; if there is no clear match, fall back to **Other**.
+   Never leave `Area` empty. Resolve the Area row's page ID by fetching the Areas DB
+   (`collection://<Areas DB id>` from the registry) once and mapping its row titles → page IDs, then
+   set the relation to that page (match on the Area name, ignoring any emoji prefix in the title).
+4. **Verify** the new row exists (it returns a URL/ID), THEN update the source Inbox row: set its
+   `Type` to the Type you assigned in 3.1, set `Status=Sorted`, and set
+   `Target="<RealBaseName>/<title>"`. Writing `Type` back is REQUIRED — an Inbox row left with a
+   blank `Type` means the sort never recorded what it decided. `Target` is an audit label only — it is
+   NOT a substitute for creating the row. NEVER set `Status=Sorted` for an item whose destination row
+   was not created and verified. If the write failed, leave Inbox `New` and report the error — never
+   report success for a write that did not happen.
 5. External action → enqueue an Outbox row (Handler per taxonomy) instead of acting directly.
 
 ## Rules
 - Resolve every base ID from `bases.local.json`. No invented names, no hardcoded IDs.
 - Filter `Status=New` client-side via per-page `notion-fetch`; never trust a search query string to
   filter by property.
+- When marking an Inbox row `Sorted`, always write its decided `Type` back — never leave it blank.
+- On any base with an Area relation, always set `Area`; fall back to **Other** when no clear match.
 - Don't split partially recognized: file whole OR Not Recognized with a reason.
 - Never delete records — only change Status. The sort routine never executes outbound work.
 - reference ≠ action. Doubt → Not Recognized.

@@ -17,7 +17,7 @@ NOT query Notion for the base list each run.
 | reminder | **Tasks** | Tag=Reminder + date |
 | reference | **Knowledge** | a fact/note/reference (e.g. health note), NOT a task |
 | goal | **Goals** | Horizon, Area, Target date |
-| idea | **Ideas** | any idea/thought (content, startup, or other). Set `Ideas.Type` = Content / Startup / Other (the subtype). Platform/Status optional — mainly for Content. |
+| idea | **Ideas** | any idea/thought (content, startup, or other). Set `Ideas.Type` = Content / Startup / Other (the subtype). Status optional — mainly for Content. |
 | event | **Outbox** (Type=calendar, Handler=Steward (MCP)) | enqueue; the executor routine creates the calendar event via MCP |
 | review | **Reviews** | reflection on a period; find/create the current period row and append the text to the matching area column (Health/Sport/Career/Work/Money/Family) |
 | expense | (no destination yet) | set Type, leave New, note it in the report — Finance not connected |
@@ -33,6 +33,8 @@ NOT query Notion for the base list each run.
   (e.g. "run a marathon this year"). An **idea** is an unstarted seed — a startup, product, or
   content idea. A startup/business/product concept is an `idea` (`Ideas.Type=Startup`), NOT a goal.
   When committed to execution it becomes a **Projects** row, not a Goal.
+- Always set `Area` on bases that have it (Goals, Ideas, Knowledge, Projects): match by meaning, and
+  if there is no clear, explicit match fall back to **Other** — never leave `Area` empty.
 - The sort routine never executes outbound work — it enqueues an **Outbox** row with a `Handler`:
   `notify` → Concierge Gateway; `calendar/doc/sheet/other` → Steward (MCP, executor routine).
 

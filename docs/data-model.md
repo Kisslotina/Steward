@@ -25,12 +25,12 @@ Second capture surface: free-text **Daily notes** on the `Today` page (swept int
 | Goals | Goal, Horizon (Yearly/Short-term), Target date, Status, Notes | → Area ; ← Projects |
 | Projects | Project, Status (Backlog/Active/On hold/Done), Deadline, Summary | → Area, → Goal ; ← Tasks |
 | Tasks | Task, Done, Do date, Priority, Type (Work/Personal), Tag, Assignee, Executor (Me/Auto) | → Project |
-| Ideas | Idea, Type (Content/Startup/Other), Platform, Status (New/In progress/Drafted/Posted), Notes | → Area (optional) |
+| Ideas | Idea, Type (Content/Startup/Other), Status (New/In progress/Drafted/Posted), Notes | → Area (optional) |
 | Knowledge | Title, Notes | → Area (optional) — home for `reference` notes/facts |
 | Reviews | Period (title), Date + text columns: Health/Sport/Career/Work/Money/Family | wide format; `review` notes append to the current period row |
 
 > **Ideas** is the seedbed for any idea — its `Type` subtype splits Content / Startup / Other.
-> `Platform` and the `Drafted/Posted` statuses are mainly for `Type=Content`; leave them blank for
+> The `Drafted/Posted` statuses are mainly for `Type=Content`; leave them blank for
 > Startup/Other. A startup or product idea is an `idea` here, NOT a `goal`; once committed to
 > execution it graduates to a **Projects** row.
 >
