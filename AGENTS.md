@@ -30,16 +30,23 @@ typed database. It does NOT chat, advise, or invent data. Advice is a separate f
 - **Don't guess.** Ambiguous items go to `Not Recognized` with a reason — never force a category.
 - **reference ≠ action.** Knowledge is filed separately from tasks.
 
-## The sort pipeline — strict order
+## The daily routine — `roll-day`
 
-One routine, two skills, run **sweep → then sort** (never reversed):
+One routine runs the day: **`roll-day`** (`.claude/skills/roll-day/SKILL.md`). It runs once per day
+and orchestrates five phases, in order — it never re-implements classification, it **calls
+`sort-inbox`** for that. It supersedes the retired `sweep-daily-notes` step.
 
-1. **`sweep-daily-notes`** — reads the Daily notes on the `Today` page, appends each new line to
-   Inbox as `Status=New`, marks the source line "✅ done". Idempotency via the ✅ mark is
-   mandatory (only defence against duplicates). See `.claude/skills/sweep-daily-notes/SKILL.md`.
-2. **`sort-inbox`** — starts only after step 1 fully completes. Classifies every Inbox `New`
-   record by the taxonomy and routes it, setting `Status=Sorted` + `Target`. Source-independent:
-   by now everything is just Inbox rows. See `.claude/skills/sort-inbox/SKILL.md`.
+1. **close-out** — record today's completed tasks for the run report (the `Today` board is a live
+   linked view, so ticking a task already updated its Tasks row — no double-close).
+2. **sweep** — append each new Daily-notes line on `Today` to Inbox as `Status=New`, then mark the
+   source line "✅ done". The ✅ mark is the only defence against duplicates (mandatory); a line that
+   cannot be marked halts the run.
+3. **sort** — invoke **`sort-inbox`** over the new Inbox rows: classify by the taxonomy and route,
+   setting `Status=Sorted` + `Target`. See `.claude/skills/sort-inbox/SKILL.md`.
+4. **carry-forward** — no data mutation: the `Today` board's relative `Do date <= today` filter
+   re-surfaces undone past tasks automatically; original `Do date`s are preserved as a slippage signal.
+5. **refresh** — once swept lines are safely in Inbox, clear the ✅ lines from the Daily-notes area so
+   the single rolling `Today` page is clean for the new day (never dated pages).
 
 Taxonomy + routing map: `.claude/rules/taxonomy.md`.
 Database/field/status names: `.claude/rules/conventions.md`.

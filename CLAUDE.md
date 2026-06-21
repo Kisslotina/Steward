@@ -11,8 +11,8 @@ Claude-specific guidance, per Claude Code conventions
 Domain procedures live in `.claude/skills/` and load on demand:
 
 - `bootstrap-notion` — one-time: create all Notion bases, relations, views (first-time setup).
-- `sweep-daily-notes` — pull Today's Daily notes into Inbox (run first).
-- `sort-inbox` — classify + route Inbox records (run second).
+- `roll-day` — the daily routine: close-out → sweep → sort → carry-forward → refresh (calls `sort-inbox`).
+- `sort-inbox` — classify + route Inbox records (invoked by `roll-day`, or run standalone).
 
 ## Rules
 

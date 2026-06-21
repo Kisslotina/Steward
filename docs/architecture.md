@@ -59,16 +59,21 @@ Two surfaces, one sort pipeline:
 - **Daily notes** — free text on the `Today` page (work context, written in the moment). `Today`
   stays a clean work screen; the full Inbox is not shown there.
 
-## 6. The sort pipeline
+## 6. The daily routine
 
-One routine, two skills, strict order **sweep → then sort** (else sort runs before fresh notes
-arrive):
+One routine runs the day — **`roll-day`** — once per day, in five phases. It **calls `sort-inbox`**
+for classification rather than re-implementing it, and supersedes the retired `sweep-daily-notes` step:
 
-1. **`sweep-daily-notes`** — appends each new Daily-notes line to Inbox `New`, marks the source line
-   "✅ done". Idempotency via the ✅ mark is the only defence against duplicates.
-2. **`sort-inbox`** — runs after sweep completes. Classifies every Inbox `New` record by the
-   taxonomy, routes it, sets `Status=Sorted` + `Target`. Source-independent: everything is just
-   Inbox rows by now.
+1. **close-out** — record today's completed tasks for the run report (the `Today` board is a live
+   linked view, so a ticked task already updated its Tasks row — no double-close).
+2. **sweep** — append each new Daily-notes line to Inbox `New`, mark the source line "✅ done".
+   Idempotency via the ✅ mark is the only defence against duplicates.
+3. **sort** — **`sort-inbox`** classifies every Inbox `New` record by the taxonomy, routes it, sets
+   `Status=Sorted` + `Target`. Source-independent: everything is just Inbox rows by now.
+4. **carry-forward** — no date mutation: the `Today` board's relative `Do date <= today` filter
+   re-surfaces undone past tasks automatically; their original `Do date`s are kept as a slippage signal.
+5. **refresh** — after swept lines reach Inbox, clear the ✅ lines so the single rolling `Today` page
+   is clean for the next day (never dated pages).
 
 ![Pipeline](diagrams/pipeline.svg)
 

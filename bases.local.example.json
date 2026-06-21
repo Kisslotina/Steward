@@ -1,6 +1,7 @@
 {
-  "_comment": "Per-user registry of Notion base name -> data-source ID. Copy to bases.local.json (git-ignored) or let `bootstrap-notion` write it. The sort routine reads this instead of querying Notion for the base list.",
+  "_comment": "Per-user registry of Notion base name -> data-source ID. Copy to bases.local.json (git-ignored) or let `bootstrap-notion` write it. The sort routine reads this instead of querying Notion for the base list. 'Today' is a PAGE id, not a data-source id.",
   "Inbox": "",
+  "Inbox Archive": "",
   "Tasks": "",
   "Projects": "",
   "Goals": "",
@@ -9,5 +10,6 @@
   "Areas DB": "",
   "Reviews": "",
   "Not Recognized": "",
-  "Outbox": ""
+  "Outbox": "",
+  "Today": ""
 }

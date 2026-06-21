@@ -14,8 +14,21 @@ with `.claude/rules/conventions.md`.
 | Status | Select | New → Sorted |
 | Target | Text | where it was filed (audit) |
 
-Second capture surface: free-text **Daily notes** on the `Today` page (swept into Inbox by
-`sweep-daily-notes`).
+Second capture surface: free-text **Daily notes** on the `Today` page (swept into Inbox by the daily
+routine).
+
+### Today (page, not a database)
+
+The daily driver — created EMPTY by `bootstrap-notion`, filled and handled daily by `roll-day`. Its
+page ID is stored in `bases.local.json` under key `Today` (a page ID, not a data-source ID). Structure:
+
+- `## 📝 Daily notes` — free-text capture area (swept into Inbox each day).
+- a divider, then an inline **linked view of Tasks** (the day board): `GROUP BY Type`,
+  `FILTER Done = false AND Do date ≤ today`, `SORT BY Do date ASC, Priority ASC`. Work/Personal come
+  from the grouping; `Triage` and overdue/carried items surface via the `Tag` colour and the date sort.
+
+One rolling page (not one page per day): `roll-day` refreshes its content daily; task history lives in
+Tasks, swept notes live in Inbox.
 
 ## Typed bases (PARA)
 

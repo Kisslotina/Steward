@@ -19,7 +19,7 @@ iPhone (Hey Siri "Inbox" / Action Button / Back Tap)
         │  dictate → text on-device
         ▼
 Notion Inbox [Status: New]  ──►  Steward routine  ──►  typed Notion bases (PARA)
-                                  (sweep → sort)        + Not Recognized (dead-letter)
+                                  (roll-day)            + Not Recognized (dead-letter)
                                         │  enqueue outbound work (with Handler)
                                         ▼
                                   Outbox queue (Notion)
@@ -36,7 +36,7 @@ AGENTS.md            # vendor-neutral agent instructions (the operating contract
 CLAUDE.md            # imports AGENTS.md + Claude-specific notes
 .claude/
   rules/             # always-loaded rules (taxonomy, conventions)
-  skills/            # on-demand procedures (sweep-daily-notes, sort-inbox)
+  skills/            # on-demand procedures (bootstrap-notion, roll-day, sort-inbox)
 docs/                # architecture, data model, diagrams, iOS shortcut, profile template
 .env.example         # required secrets (names only)
 ```
@@ -79,7 +79,7 @@ separate Notion connections** and it's important not to confuse them:
 
 | Connection | Who uses it | Auth | Purpose |
 |---|---|---|---|
-| **Notion connector** | Claude (Cowork / Claude Code) | OAuth, in the Claude UI | Lets Claude create and manage the bases, run `bootstrap-notion`, sweep + sort the Inbox. |
+| **Notion connector** | Claude (Cowork / Claude Code) | OAuth, in the Claude UI | Lets Claude create and manage the bases, run `bootstrap-notion`, and run the daily `roll-day` routine (sweep + sort the Inbox). |
 | **Internal integration** (`Steward Capture`) | the iOS shortcut on your phone | a secret token (`ntn_...`) | Lets the phone write captured notes straight into the Inbox via the Notion API. |
 
 You need **both**: the connector is how Claude reaches Notion; the integration token is how your
@@ -140,18 +140,19 @@ shortcut.
 > shortcut and the Concierge Gateway repo), not here. Connectors, secrets and the Notion bases are
 > per-user and set up by whoever forks the repo.
 
-## Scheduling the daily sort
+## Scheduling the daily run
 
 A scheduled task should **reference the skills + `bases.local.json`**, never hardcode Notion IDs
 (IDs drift between bootstraps and the run will fail). Recommended task prompt:
 
 ```
-Run the Steward inbox sort. Read bases.local.json for data-source IDs (never hardcode IDs;
-if missing, locate the bases under the "Steward" page and save bases.local.json). Then follow,
-in order, .claude/skills/sweep-daily-notes/SKILL.md and .claude/skills/sort-inbox/SKILL.md and
-.claude/rules/*. For each New Inbox row: classify, CREATE the row in the destination base, VERIFY
-it exists, and ONLY THEN set Status=Sorted + Target. Target is an audit label, not a substitute
-for creating the row — never mark Sorted without a verified destination row. Report per entry and totals.
+Run the Steward daily routine. Read bases.local.json for data-source IDs and the Today page ID
+(never hardcode IDs; if missing, locate the bases under the "Steward" page and save
+bases.local.json). Then follow .claude/skills/roll-day/SKILL.md and .claude/rules/* — it runs
+close-out → sweep → sort → carry-forward → refresh, calling sort-inbox for classification. For
+each New Inbox row: classify, CREATE the row in the destination base, VERIFY it exists, and ONLY
+THEN set Status=Sorted + Target. Target is an audit label, not a substitute for creating the row —
+never mark Sorted without a verified destination row. Report per entry and totals.
 ```
 
 > Why this matters: setting `Status=Sorted` + a `Target` label in Inbox is **not** filing. The
