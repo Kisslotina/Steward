@@ -18,6 +18,11 @@ batch out to Inbox Archive** (Step 4), then **re-reads the now-smaller live Inbo
 (Step 5). Because each filed batch leaves the live Inbox, the next read surfaces the next ≤25 — so the
 loop drains any backlog reliably, on a free plan, with no pagination and no anchor-union guessing.
 
+**⚠ HARD RULE — never stop after a single batch.** After every Step 4 archive, you MUST go back to
+Step 1.2 and re-read the Inbox before declaring done. A batch of exactly 25 almost certainly has more
+behind the cap. Even fewer than 25 is not a stopping signal on its own — re-read and confirm zero
+`Status=New` rows remain. The only valid exit is a fresh read that finds no `New` rows.
+
 ## Step 0 — load the registry, rules, and schemas (no live Notion list query)
 1. Read the local registry **`bases.local.json`** (base name → data-source ID), written by
    `bootstrap-notion`. This is the source of truth for which bases exist and their IDs.
@@ -61,7 +66,11 @@ That is what makes this read both cheap and complete.
    rows with more anchors). Remember whether this read returned a full 25 — Step 5 uses it.
 3. **Confirm `Status` per page (the only reliable filter).** `notion-fetch` each unique `page_id` and
    read `Note`, `Status`, `Type`, `Target`. Split into:
-   - **to file** — `Status = New` → Steps 2–3.
+   - **to file** — `Status = New` AND `Type` is blank or not `expense` → Steps 2–3.
+   - **skip (already classified, no destination)** — `Status = New` AND `Type = expense` → do NOT
+     re-classify or re-file. These rows stay `New` intentionally (no Finance base exists yet). Count
+     them in the report but do not touch them. Without this skip they reappear in every batch search
+     and create an infinite loop.
    - **to archive** — `Status = Sorted` → leftovers from a prior run whose move failed → Step 4 only.
 4. **Sanity check.** If discovery returned rows but none are `New`, report "nothing to sort". If it
    returned **zero** rows for an Inbox that should not be empty, report a **read failure** — never
@@ -124,18 +133,18 @@ Inbox so the next run's read stays cheap and complete:
    and note it in the report (run `bootstrap-notion` to add the archive). A `Sorted` row left in the
    Inbox is still correct — it won't be re-filed (Step 1.3 sends it straight to archive next run).
 
-## Step 5 — repeat until the live Inbox is drained
-The 25-row, no-pagination read (Step 1.2) means one pass may not have seen the whole `New` backlog.
-Each pass moved its filed batch out to Inbox Archive (Step 4), so the live Inbox is now smaller and a
-fresh read surfaces the next rows. Decide whether to loop:
-1. If the last enumeration (Step 1.2) returned a **full 25** rows, or any `New` rows were left
-   unprocessed (e.g. a write that has since been fixed), **go back to Step 1.2** and run another
-   batch — Steps 1.2 → 4. The hint list is already consumed; this pass discovers the next live rows.
-2. Stop when a fresh enumeration returns **fewer than 25** rows and none of them are `Status = New`.
-   That is the drained state: the live Inbox holds only un-filed captures yet to arrive.
-3. **Safeguard against a stuck loop.** Cap at a sane number of passes (e.g. 10 ≈ 250 rows). If the
-   live `New` count is not strictly shrinking pass over pass, **stop and report** a likely failed
-   archive move — never spin. Always report how many passes ran and the final live-Inbox size.
+## Step 5 — MANDATORY re-read after every batch (loop until drained)
+The 25-row, no-pagination cap means one pass never guarantees the whole backlog was seen. After
+archiving a batch (Step 4), **always go back to Step 1.2** — no exceptions. The loop ends only when
+a fresh read confirms no `New` rows remain (excluding expense rows, which stay `New` intentionally).
+
+1. **After every Step 4, unconditionally go back to Step 1.2.** Do not evaluate "was the batch
+   full?" first — just re-read. The hint list is already consumed; this read discovers the next live rows.
+2. **Stop only when a fresh read finds zero `Status=New` rows** (expense rows with `Type=expense`
+   do not count — they are expected to stay `New`). That is the drained state. Report the final count.
+3. **Safeguard against a stuck loop.** Cap at 10 passes (≈ 250 rows). If the live `New` count is not
+   strictly shrinking pass over pass, stop and report a likely failed archive move — never spin.
+   Always report how many passes ran and the final live-Inbox size.
 
 ## Rules
 - Resolve every base ID from `bases.local.json`. No invented names, no hardcoded IDs.
