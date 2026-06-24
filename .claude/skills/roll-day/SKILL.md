@@ -84,9 +84,13 @@ added on previous days). Process **all** `New` rows and nothing else (a `Sorted`
 swept lines."** `Status = New` already defines the scope completely.
 
 `sort-inbox` owns classification, routing, completion-vs-new, and archiving filed rows to **Inbox
-Archive** — **do not re-implement any of it here**. The default-date rule also lives there: a swept
-task with no date gets `Do date = today`, `Tag = Triage`, so it lands on today's board. See
-`.claude/skills/sort-inbox/SKILL.md`. Wait for it to finish before Phase 4.
+Archive** — **do not re-implement any of it here**. It also handles the read limit itself: Notion
+`notion-search` shows at most 25 rows with no pagination, so `sort-inbox` drains the backlog in
+**batches** — read ≤25, file them, move them out to Inbox Archive, re-read, repeat until no `New`
+rows remain. `roll-day` does not loop or batch here; it invokes `sort-inbox` once and lets it drain.
+The default-date rule also lives there: a swept task with no date gets `Do date = today`,
+`Tag = Triage`, so it lands on today's board. See `.claude/skills/sort-inbox/SKILL.md`. Wait for it
+to finish before Phase 4.
 
 ### 4. carry-forward — do nothing to dates (verify only)
 Undone past tasks **resurface on their own**: the Today board filters `Done = false AND Do date <=

@@ -11,6 +11,13 @@ Processes every Inbox record with `Status=New`. Invoked by `roll-day` after its 
 reasoning; schemas are read once and reused; the live Inbox is kept small so reads stay cheap. Follow
 the steps in order. Do not call the paid query tools (see Step 1).
 
+**One run drains the whole `New` backlog in batches.** `notion-search` shows at most 25 rows with no
+pagination (Step 1), so a backlog larger than 25 cannot be read in a single pass. Instead of trying
+to page past the cap, this skill processes **one batch of ≤25 at a time** (Steps 1–3), **moves that
+batch out to Inbox Archive** (Step 4), then **re-reads the now-smaller live Inbox and repeats**
+(Step 5). Because each filed batch leaves the live Inbox, the next read surfaces the next ≤25 — so the
+loop drains any backlog reliably, on a free plan, with no pagination and no anchor-union guessing.
+
 ## Step 0 — load the registry, rules, and schemas (no live Notion list query)
 1. Read the local registry **`bases.local.json`** (base name → data-source ID), written by
    `bootstrap-notion`. This is the source of truth for which bases exist and their IDs.
@@ -46,11 +53,12 @@ That is what makes this read both cheap and complete.
 
 1. **Take the hint list, if given.** When `roll-day` invokes this skill it passes the `page_id`s it
    just swept. Seed the work list from those — they need no discovery.
-2. **Enumerate the live Inbox.** `notion-search` with `data_source_url: "collection://<Inbox id>"`,
-   `query: "Inbox"` (a broad anchor, not a content word), `page_size: 25`, `max_highlight_length: 0`.
-   Union the returned `page_id`s with the hint list. If exactly 25 come back, the Inbox is larger than
-   expected (an archive move may have failed) — repeat with anchors `"note"` then `"task"`, union, and
-   flag it in the report so the archive can be repaired.
+2. **Read one batch (≤25) of the live Inbox.** `notion-search` with
+   `data_source_url: "collection://<Inbox id>"`, `query: "Inbox"` (a broad anchor, not a content
+   word), `page_size: 25`, `max_highlight_length: 0`. Union the returned `page_id`s with the hint
+   list. **Do not try to page past 25** — there is no cursor. If exactly 25 come back there is a
+   backlog; you will reach the rest in Step 5 after this batch is archived out (do not guess at extra
+   rows with more anchors). Remember whether this read returned a full 25 — Step 5 uses it.
 3. **Confirm `Status` per page (the only reliable filter).** `notion-fetch` each unique `page_id` and
    read `Note`, `Status`, `Type`, `Target`. Split into:
    - **to file** — `Status = New` → Steps 2–3.
@@ -85,6 +93,11 @@ known task/goal):
    Use the property names from the cached schema (Step 0.6).
    For `review`: find/create the current period row in Reviews and append the text to the matching
    area column. Do not just describe the write — perform it.
+   **Do date (tasks and reminders):** when filing a `task` or `reminder` to Tasks, set `Do date`
+   as follows: if the note contains an explicit date or time reference, parse and use it; otherwise
+   set `Do date = today` and add **`Tag = Triage`** (in addition to any other tag such as
+   Tag=Shopping). This mirrors the sweep rule and ensures every task surfaces on the Today board.
+   Never leave `Do date` blank on a task or reminder.
    **Area (bases that have an Area relation — Goals, Ideas, Knowledge, Projects):** always set `Area`
    using the cached Areas map and the Area cues in `routing.md`; no clear match → **Other**, never
    empty. Set the relation to the Area row's page ID (match on name, ignoring any emoji prefix).
@@ -111,12 +124,26 @@ Inbox so the next run's read stays cheap and complete:
    and note it in the report (run `bootstrap-notion` to add the archive). A `Sorted` row left in the
    Inbox is still correct — it won't be re-filed (Step 1.3 sends it straight to archive next run).
 
+## Step 5 — repeat until the live Inbox is drained
+The 25-row, no-pagination read (Step 1.2) means one pass may not have seen the whole `New` backlog.
+Each pass moved its filed batch out to Inbox Archive (Step 4), so the live Inbox is now smaller and a
+fresh read surfaces the next rows. Decide whether to loop:
+1. If the last enumeration (Step 1.2) returned a **full 25** rows, or any `New` rows were left
+   unprocessed (e.g. a write that has since been fixed), **go back to Step 1.2** and run another
+   batch — Steps 1.2 → 4. The hint list is already consumed; this pass discovers the next live rows.
+2. Stop when a fresh enumeration returns **fewer than 25** rows and none of them are `Status = New`.
+   That is the drained state: the live Inbox holds only un-filed captures yet to arrive.
+3. **Safeguard against a stuck loop.** Cap at a sane number of passes (e.g. 10 ≈ 250 rows). If the
+   live `New` count is not strictly shrinking pass over pass, **stop and report** a likely failed
+   archive move — never spin. Always report how many passes ran and the final live-Inbox size.
+
 ## Rules
 - Resolve every base ID from `bases.local.json`. No invented names, no hardcoded IDs.
 - **Classify with `routing.md` first**; only deliberate on notes that match no rule.
 - **Read each base schema and the Areas map once per run**, never per item.
 - **Never call `query_data_sources` or `query_database_view`** — paid (Enterprise / Business). Read
-  via `notion-search` + per-page `notion-fetch`; that is why the Inbox is kept small (Step 4).
+  via `notion-search` (≤25, no pagination) + per-page `notion-fetch`; drain any backlog with the
+  batch loop (Step 5), which works because filed rows are moved out to Inbox Archive (Step 4).
 - When marking an Inbox row `Sorted`, always write its decided `Type` back — never leave it blank.
 - On any base with an Area relation, always set `Area`; fall back to **Other** when no clear match.
 - Don't split partially recognized: file whole OR Not Recognized with a reason.
