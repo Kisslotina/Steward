@@ -18,6 +18,10 @@ batch out to Inbox Archive** (Step 4), then **re-reads the now-smaller live Inbo
 (Step 5). Because each filed batch leaves the live Inbox, the next read surfaces the next ≤25 — so the
 loop drains any backlog reliably, on a free plan, with no pagination and no anchor-union guessing.
 
+**⛔ NEVER output the final report or stop while a fresh read (Step 1.2) returned exactly 25 rows.**
+Exactly 25 = there is a remainder still in the Inbox. Silently launch the next pass (Steps 1.2 → 4).
+Write the final report ONLY when a fresh read returns strictly fewer than 25 rows.
+
 **⚠ HARD RULE — never stop after a single batch.** After every Step 4 archive, you MUST go back to
 Step 1.2 and re-read the Inbox before declaring done. A batch of exactly 25 almost certainly has more
 behind the cap. Even fewer than 25 is not a stopping signal on its own — re-read and confirm zero
@@ -140,6 +144,8 @@ a fresh read confirms no `New` rows remain (excluding expense rows, which stay `
 
 1. **After every Step 4, unconditionally go back to Step 1.2.** Do not evaluate "was the batch
    full?" first — just re-read. The hint list is already consumed; this read discovers the next live rows.
+   **Do NOT emit any report between passes — intermediate or partial summaries are forbidden.** The run
+   produces exactly **one** report, written only after the loop has fully drained the Inbox (point 2).
 2. **Stop only when a fresh read finds zero `Status=New` rows** (expense rows with `Type=expense`
    do not count — they are expected to stay `New`). That is the drained state. Report the final count.
 3. **Safeguard against a stuck loop.** Cap at 10 passes (≈ 250 rows). If the live `New` count is not
