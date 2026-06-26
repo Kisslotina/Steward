@@ -6,7 +6,12 @@ description: Creates the full Steward Notion structure from scratch — all base
 # Bootstrap Notion
 
 One-time setup. Creates every base the system needs, wired with relations, then saves a registry of
-data-source IDs. Schema reference: `docs/data-model.md`; names/casing: `.claude/rules/conventions.md`.
+data-source IDs.
+
+> **Source of truth.** The field/value list below is an *executable copy* for running the bootstrap.
+> Canon for *structure* is `docs/data-model.md`; canon for *exact names & select values* is
+> `.claude/rules/conventions.md` (`Inbox.Type` in `taxonomy.md`). On any disagreement those win and
+> this list is corrected to match — keep them in sync.
 
 ## Prerequisites
 - Notion connector connected, able to create databases/pages.
@@ -75,6 +80,36 @@ Create each as a database under the parent; put the emoji in the title (e.g. `�
 - Report each base with its ID. Remind the user to connect their capture integration to **Inbox**
   (••• → Connections) so the iOS shortcut can POST to it.
 - Leave all bases empty except the Area rows. Never insert personal data.
+
+## After — write the schema cache (REQUIRED, do not skip)
+You just created every base, so you already know its exact title field, date fields, select options,
+and the URL of each Area row. Persist that as the **write-contract** so `sort-inbox` never has to
+re-discover it through failed writes. **Write `schema.cache.json` in the project root** (git-ignored,
+same place as `bases.local.json`); shape mirrors `schema.cache.example.json`.
+
+Per **destination base** that `sort-inbox` writes (Tasks, Goals, Ideas, Knowledge, Reviews,
+Not Recognized, Outbox) record:
+- `title` — the exact title-property name to write the row name into (Tasks→`Task`, Goals→`Goal`,
+  Ideas→`Idea`, Knowledge→`Title`, Reviews→`Period`, Not Recognized→`Note`, Outbox→`Item`).
+- `dateFields` — every date property, by exact name (Tasks→`["Do date"]`, Goals→`["Target date"]`,
+  others `[]`). These are written with the expanded form `date:<Field>:start`, never bare.
+- `selects` — every select property → its full allowed-option list, copied verbatim from the create
+  step (e.g. Goals `Horizon: ["Yearly","Short-term"]`, `Status: ["Not started","In progress","Done"]`;
+  Ideas `Type: ["Content","Startup","Other"]`, `Status: ["New","In progress","Drafted","Posted"]`;
+  Tasks `Type/Priority/Tag/Executor`; Outbox `Type/Handler/Status`; Not Recognized `Status/Source`).
+  Writing any value outside this list errors ("Invalid select value").
+
+Then record the top-level maps:
+- `areas` — Area **name** (without the emoji prefix) → the **full Notion URL** of that Area row you
+  just created (Career, Health, Sport, Money, Family, Content, Other). Relations require the full URL,
+  not a bare id. Areas DB is canonical and effectively never changes, so this map is cached
+  indefinitely.
+- `reviews.currentRow` — leave `{"id":"", "periodLabel":""}` at bootstrap; `sort-inbox` fills it the
+  first time it touches Reviews and refreshes it when the period rolls over.
+
+This file is what makes the sort phase cheap: with it present, `sort-inbox` reads field names,
+formats, select values, and Area URLs from disk instead of fetching base schemas or learning them
+through API errors. Writing it here is mandatory.
 
 ## Rules
 - Relations are two-way (DUAL); the back-relation appears automatically on the target base.
