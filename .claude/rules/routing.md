@@ -29,7 +29,7 @@ Cues are substrings/stems, case-insensitive, matched in English and Russian (the
 | 5 | goal | `goal`, `by end of year`, `this quarter`, measurable target + horizon / `цель`, `к концу года`, `за месяц`, `похудеть до`, `накопить` | -> **Goals** (Horizon, Area, Target date) |
 | 6 | idea | `idea:`, `what if`, `concept`, `startup`, `video about`, `post about`, `blog` / `идея`, `а что если`, `стартап`, `снять видео`, `пост про`, `проект про` | -> **Ideas** (set subtype, see below) |
 | 7 | reference | `note:`, `fyi`, `fact`, `allergic to`, `password`, a stored fact with no action / `факт`, `на заметку`, `аллергия на`, `номер`, `пароль` | -> **Knowledge** (no action) |
-| 8 | expense | `spent`, `paid`, `$`, currency amount / `потратил`, `оплатил`, `купил за`, `руб`, `грн` | no destination base yet — set Type, leave New, note in report |
+| 8 | expense | `spent`, `paid`, `$`, currency amount / `потратил`, `оплатил`, `купил за`, `руб`, `грн` | no Finance base yet — set Type=expense, then **move out to Inbox Archive** marked `Target=expense → pending Finance` (sort-inbox Step 4); note in report. Do NOT leave it `New`. |
 | 9 | task (shopping) | `buy`, `pick up`, `order`, `groceries` / `купить`, `закупить`, `заказать`, `нужны` (a thing to acquire) | -> **Tasks** (Tag=Shopping) |
 | 10 | task (default) | any remaining imperative/action — `do`, `send`, `fix`, `write`, `call X`, `book` / `сделать`, `отправить`, `написать`, `починить`, `записаться` | -> **Tasks** (Tag=From Daily if swept from Today) |
 

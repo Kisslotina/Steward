@@ -22,7 +22,7 @@ NOT query Notion for the base list each run.
 | idea | **Ideas** | any idea/thought (content, startup, or other). Set `Ideas.Type` = Content / Startup / Other (the subtype). Status optional — mainly for Content. |
 | event | **Outbox** (Type=calendar, Handler=Steward (MCP)) | enqueue; the executor routine creates the calendar event via MCP |
 | review | **Reviews** | reflection on a period; find/create the current period row and append the text to the matching area column (Health/Sport/Career/Work/Money/Family) |
-| expense | (no destination yet) | set Type, leave New, note it in the report — Finance not connected |
+| expense | **Inbox Archive** (pending-Finance marker) | no Finance base yet: set Type=expense, mark `Target=expense → pending Finance`, and **move out of the live Inbox** in sort-inbox Step 4 (do NOT leave `New` — that re-fetches it every batch). Note it in the report. A future Finance consumer reads these from Archive by `Type=expense`. |
 | unsure | **Not Recognized** | Note + Reason + Source; do not guess — leave for the user |
 
 ## Rules

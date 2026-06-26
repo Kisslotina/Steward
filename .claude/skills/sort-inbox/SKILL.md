@@ -19,8 +19,11 @@ batch out to Inbox Archive** (Step 4), then **re-reads the now-smaller live Inbo
 loop drains any backlog reliably, on a free plan, with no pagination and no anchor-union guessing.
 
 **⛔ NEVER output the final report or stop while a fresh read (Step 1.2) returned exactly 25 rows.**
-Exactly 25 = there is a remainder still in the Inbox. Silently launch the next pass (Steps 1.2 → 4).
-Write the final report ONLY when a fresh read returns strictly fewer than 25 rows.
+Exactly 25 = the 25-row cap was hit, so there is almost certainly a remainder behind it — silently
+launch the next pass (Steps 1.2 → 4). A read of fewer than 25 only means nothing is hidden behind the
+cap; it is **not** itself a stop signal. The real exit is a single condition: **a fresh read finds
+zero `Status=New` rows** (Step 5.2). Keep looping — process any `New` rows you see, archive, re-read —
+until that holds, then write the one final report.
 
 **⚠ HARD RULE — never stop after a single batch.** After every Step 4 archive, you MUST go back to
 Step 1.2 and re-read the Inbox before declaring done. A batch of exactly 25 almost certainly has more
@@ -87,10 +90,11 @@ That is what makes this read both cheap and complete.
 3. **Confirm `Status` per page (the only reliable filter).** `notion-fetch` each unique `page_id` and
    read `Note`, `Status`, `Type`, `Target`. Split into:
    - **to file** — `Status = New` AND `Type` is blank or not `expense` → Steps 2–3.
-   - **skip (already classified, no destination)** — `Status = New` AND `Type = expense` → do NOT
-     re-classify or re-file. These rows stay `New` intentionally (no Finance base exists yet). Count
-     them in the report but do not touch them. Without this skip they reappear in every batch search
-     and create an infinite loop.
+   - **expense (no Finance base) → move out, do NOT re-file** — `Status = New` AND `Type = expense`.
+     Do NOT re-classify. Collect these `page_id`s for Step 4, which **moves them out of the live
+     Inbox** (with a pending-Finance marker) exactly like filed rows. Counting them is not enough —
+     they must LEAVE the live Inbox, otherwise they resurface in every `notion-search`, get
+     re-fetched every batch, eat slots in the ≤25 cap, and spin the loop. Count them in the report.
    - **to archive** — `Status = Sorted` → leftovers from a prior run whose move failed → Step 4 only.
 4. **Sanity check.** If discovery returned rows but none are `New`, report "nothing to sort". If it
    returned **zero** rows for an Inbox that should not be empty, report a **read failure** — never
@@ -120,8 +124,11 @@ known task/goal):
    (equivalently the base's `collection://<id>`). **Do NOT use a database page URL or a
    `database_id`** — these bases are addressed by data-source ID, keyed by name in the registry.
    Use the property names from the cached schema (Step 0.6).
-   For `review`: find/create the current period row in Reviews and append the text to the matching
-   area column. Do not just describe the write — perform it.
+   For `review`: find/create the current period row in Reviews (reuse `reviews.currentRow` per
+   Step 0.6 when the period label matches), then **append by read-modify-write** — Reviews has NO
+   `append` command: `notion-fetch` the period row, read the current value of the matching area
+   column, and `notion-update-page` with the FULL new value (old text + newline + the new line). Do
+   not just describe the write — perform it.
    **Do date (tasks and reminders):** when filing a `task` or `reminder` to Tasks, set `Do date`
    as follows: if the note contains an explicit date or time reference, parse and use it; otherwise
    set `Do date = today` and add **`Tag = Triage`** (in addition to any other tag such as
@@ -129,7 +136,8 @@ known task/goal):
    Never leave `Do date` blank on a task or reminder.
    **Area (bases that have an Area relation — Goals, Ideas, Knowledge, Projects):** always set `Area`
    using the cached Areas map and the Area cues in `routing.md`; no clear match → **Other**, never
-   empty. Set the relation to the Area row's page ID (match on name, ignoring any emoji prefix).
+   empty. Set the relation to the Area's **full Notion URL** from the cached `areas` map (Step 0.6) —
+   never a bare page id (a bare id errors "Invalid agent URL"). Match on name, ignoring emoji prefix.
 4. **Verify** the new row exists (it returns a URL/ID), THEN update the source Inbox row: set its
    `Type` to the Type you assigned in 3.1, set `Status=Sorted`, and set
    `Target="<RealBaseName>/<title>"`. Writing `Type` back is REQUIRED — a `Sorted` row with a blank
@@ -139,14 +147,48 @@ known task/goal):
    report success for a write that did not happen.
 5. External action → enqueue an Outbox row (Handler per taxonomy) instead of acting directly.
 
+### Exact call forms (copy verbatim — never improvise these)
+These are the parameter shapes that previously failed and cost retries. Use them exactly.
+
+1. **`notion-fetch` — always by `id`, never `url`:** `notion-fetch { id: "<page_id>" }`. Passing
+   `url:` makes every fetch in the batch fail.
+2. **`notion-move-pages` — param is `page_or_database_ids`, ONE batched call (≤100 ids):**
+   `notion-move-pages { page_or_database_ids: [<ids…>], new_parent: { type: "data_source_id",
+   data_source_id: "<Inbox Archive id>" } }`. Not `page_ids`.
+3. **`notion-create-pages` — `parent` at the TOP level, not inside `pages[]`; dates expanded:**
+   `notion-create-pages { parent: { type: "data_source_id", data_source_id: "<dest id>" },
+   pages: [ { properties: { "<title-field>": "…", "date:<Field>:start": "YYYY-MM-DD", … } } ] }`.
+   A `parent` key inside a `pages[]` object errors "Unrecognized key: parent". Write dates as
+   `date:<Field>:start` (e.g. `date:Do date:start`) — a bare `Do date` errors "Date type must be
+   expanded".
+4. **Area relation — always the full Notion URL** from the cached `areas` map (Step 0.6), never a
+   bare page id (a bare id errors "Invalid agent URL").
+5. **Select properties — only values from the write-contract** (`selects` in `schema.cache.json`).
+   Anything else errors "Invalid select value" (e.g. free-text "December 2026" into Goals.`Horizon`,
+   whose only values are `Yearly` / `Short-term`).
+6. **Reviews has no append** — read-modify-write: `notion-fetch` the period row → read the area
+   column → `notion-update-page` with the full new value. There is no `append` command.
+7. **Transient server errors → retry once, then report.** A 5xx / timeout / "service unavailable"
+   on a single write is usually transient: **retry that one call exactly once.** If it fails again,
+   leave that Inbox row `New` and report it — do not abort the batch and do not retry more than once.
+   This applies ONLY to transient server errors, never to the validation errors above (those are
+   contract bugs — fix the call shape or self-heal the cache, do not retry blindly).
+
 ## Step 4 — archive filed rows (keep the live Inbox small)
 After Steps 2–3 every successfully filed/closed row is `Status=Sorted`. Move them out of the live
 Inbox so the next run's read stays cheap and complete:
-1. Collect the `page_id`s of all rows set to `Status=Sorted` this run, plus any `to archive`
-   leftovers from Step 1.3.
-2. `notion-move-pages` them in **one batched call** (up to 100 ids) with
+1. Collect the `page_id`s to move out this run:
+   a. every row set `Status=Sorted` by Steps 2–3 (filed / closed items);
+   b. the **expense** rows from Step 1.3 — first update each: set `Status=Sorted` and
+      `Target="expense → pending Finance"` (`Type=expense` is preserved). This keeps Inbox Archive's
+      invariant ("everything here is Sorted") and lets a future Finance consumer find them by
+      `Type=expense` + that `Target`. If the registry later gains a dedicated holding base
+      (e.g. `Expenses Pending`), move expense rows there instead — destination is registry-driven;
+   c. any `Status=Sorted` `to archive` leftovers from Step 1.3.
+2. `notion-move-pages` them all in **one batched call** (up to 100 ids) with
    `new_parent: { type: "data_source_id", data_source_id: "<Inbox Archive id>" }`. Inbox Archive has
-   the same schema as Inbox, so `Note`, `Status`, `Type`, `Target` are preserved.
+   the same schema as Inbox, so `Note`, `Status`, `Type`, `Target` are preserved. **Expense rows are
+   moved out too** — they no longer stay `New` in the live Inbox.
 3. This is a move, **not a delete** — the rows live on in Inbox Archive as the permanent intake
    record. Never delete an Inbox row.
 4. If `Inbox Archive` is absent from the registry, skip the move, leave the rows `Sorted` in place,
@@ -156,14 +198,16 @@ Inbox so the next run's read stays cheap and complete:
 ## Step 5 — MANDATORY re-read after every batch (loop until drained)
 The 25-row, no-pagination cap means one pass never guarantees the whole backlog was seen. After
 archiving a batch (Step 4), **always go back to Step 1.2** — no exceptions. The loop ends only when
-a fresh read confirms no `New` rows remain (excluding expense rows, which stay `New` intentionally).
+a fresh read confirms no `Status=New` rows remain. (Expense rows are now moved out in Step 4, so they
+no longer linger as `New` — there is no expense exclusion to carry anymore.)
 
 1. **After every Step 4, unconditionally go back to Step 1.2.** Do not evaluate "was the batch
    full?" first — just re-read. The hint list is already consumed; this read discovers the next live rows.
    **Do NOT emit any report between passes — intermediate or partial summaries are forbidden.** The run
    produces exactly **one** report, written only after the loop has fully drained the Inbox (point 2).
-2. **Stop only when a fresh read finds zero `Status=New` rows** (expense rows with `Type=expense`
-   do not count — they are expected to stay `New`). That is the drained state. Report the final count.
+2. **Stop only when a fresh read finds zero `Status=New` rows.** That is the drained state — and it
+   is now reachable for an all-expense remainder too, because Step 4 moves expense rows out instead of
+   leaving them `New`. Report the final count.
 3. **Safeguard against a stuck loop.** Cap at 10 passes (≈ 250 rows). If the live `New` count is not
    strictly shrinking pass over pass, stop and report a likely failed archive move — never spin.
    Always report how many passes ran and the final live-Inbox size.

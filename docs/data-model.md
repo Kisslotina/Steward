@@ -1,7 +1,15 @@
 # Data model (Notion)
 
-Concise schema reference. Full rationale in `architecture.md` (sections 4–5a). Keep names in sync
-with `.claude/rules/conventions.md`.
+**Role of this file — the *what* and *why*:** which bases exist, what fields and relations they
+carry, the PARA hierarchy, and the rationale behind the structure. It is the canonical source for
+*structure*.
+
+It is **not** the canon for exact strings. The precise base/field/status names and select-option
+values the sorter relies on at runtime live in **`.claude/rules/conventions.md`** (and `Inbox.Type`
+in `taxonomy.md`). Where a table below lists option values they are illustrative — if they ever
+disagree with `conventions.md`, **conventions.md wins** and this file is corrected to match.
+
+Full rationale also in `architecture.md` (sections 4–5a).
 
 ## Capture
 

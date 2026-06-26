@@ -1,5 +1,10 @@
 # Conventions — bases, fields, statuses
 
+**Role of this file — the exact strings:** the canonical, case-sensitive base / field / status names
+and select-option values the sorter reads **at runtime** (this is an always-loaded rule). This file
+wins on exact spelling. The *structure and rationale* (which fields exist, relations, hierarchy, why)
+live in `docs/data-model.md`; `Inbox.Type` values live in `taxonomy.md`.
+
 Names must match Notion exactly (case-sensitive). Per-user data-source IDs live in
 `bases.local.json` (git-ignored), written by `bootstrap-notion`.
 

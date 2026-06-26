@@ -1,77 +1,138 @@
 {
   "_comment": "Per-user write-contract cache for the Notion bases. Copy to schema.cache.json (git-ignored) or let `bootstrap-notion` write it on setup. `sort-inbox` reads this instead of discovering field names / formats / select values through failed writes. Per base: `title` = the title-property name to write the row name into; `dateFields` = date properties (write them with the `date:<Field>:start` form); `selects` = property -> allowed option values (writing anything else errors). Top-level `areas` maps Area name -> the FULL Notion URL of the Area row (relations need the full URL, not a bare id). `reviews.currentRow` caches the active period row so the weekly Reviews lookup is skipped while the period label still matches. Replace every placeholder with real values for your workspace; `bootstrap-notion` fills these automatically.",
-
   "_format_notes": {
     "dates": "Write date fields as \"date:<Field>:start\": \"YYYY-MM-DD\" (e.g. \"date:Do date:start\"). A bare \"Do date\" errors with 'Date type must be expanded'.",
     "relations": "Area (and any relation) must be the FULL row URL from `areas` below, never a bare page id ('Invalid agent URL').",
     "selects": "Only values listed under `selects` are valid. Free-text like 'December 2026' into Goals.Horizon errors with 'Invalid select value'.",
     "title": "Use the exact `title` field name per base ('Property Name not found' means you used the wrong title field, e.g. 'Name' instead of 'Task')."
   },
-
   "Tasks": {
     "title": "Task",
-    "dateFields": ["Do date"],
+    "dateFields": [
+      "Do date"
+    ],
     "selects": {
-      "Type": ["Work", "Personal"],
-      "Tag": ["Triage", "From Daily", "Reminder", "Shopping"],
-      "Executor": ["Me", "Auto (Steward)"]
+      "Type": [
+        "Work",
+        "Personal"
+      ],
+      "Priority": [
+        "Top",
+        "Secondary"
+      ],
+      "Tag": [
+        "Triage",
+        "From Daily",
+        "Reminder",
+        "Shopping"
+      ],
+      "Executor": [
+        "Me",
+        "Auto (Steward)"
+      ]
     },
-    "_checkbox": ["Done"]
+    "_checkbox": [
+      "Done"
+    ]
   },
-
   "Goals": {
     "title": "Goal",
-    "dateFields": ["Target date"],
+    "dateFields": [
+      "Target date"
+    ],
     "selects": {
-      "Horizon": ["Yearly", "Short-term"],
-      "Status": ["Not started", "In progress", "Done"]
+      "Horizon": [
+        "Yearly",
+        "Short-term"
+      ],
+      "Status": [
+        "Not started",
+        "In progress",
+        "Done"
+      ]
     },
-    "_relations": ["Area"]
+    "_relations": [
+      "Area"
+    ]
   },
-
   "Ideas": {
     "title": "Idea",
     "dateFields": [],
     "selects": {
-      "Type": ["Content", "Startup", "Other"],
-      "Status": ["New", "In progress", "Drafted", "Posted"]
+      "Type": [
+        "Content",
+        "Startup",
+        "Other"
+      ],
+      "Status": [
+        "New",
+        "In progress",
+        "Drafted",
+        "Posted"
+      ]
     },
-    "_relations": ["Area"]
+    "_relations": [
+      "Area"
+    ]
   },
-
   "Knowledge": {
     "title": "Title",
     "dateFields": [],
     "selects": {},
-    "_relations": ["Area"]
+    "_relations": [
+      "Area"
+    ]
   },
-
   "Reviews": {
     "_comment": "Wide format: one row = one period, with a text column per area. No append command — fetch the row, read the column, update with the full new value.",
     "title": "Period",
     "dateFields": [],
     "selects": {},
-    "_areaColumns": ["Health", "Sport", "Career", "Work", "Money", "Family"]
+    "_areaColumns": [
+      "Health",
+      "Sport",
+      "Career",
+      "Work",
+      "Money",
+      "Family"
+    ]
   },
-
   "Not Recognized": {
     "title": "Note",
     "dateFields": [],
     "selects": {
-      "Status": ["Open", "Resolved"]
+      "Status": [
+        "Open",
+        "Resolved"
+      ],
+      "Source": [
+        "Inbox voice",
+        "Daily notes"
+      ]
     }
   },
-
   "Outbox": {
     "title": "Item",
     "dateFields": [],
     "selects": {
-      "Type": ["notify", "calendar", "doc", "sheet", "other"],
-      "Handler": ["Steward (MCP)", "Concierge Gateway"],
-      "Status": ["Queued", "Done", "Failed"]
+      "Type": [
+        "notify",
+        "calendar",
+        "doc",
+        "sheet",
+        "other"
+      ],
+      "Handler": [
+        "Steward (MCP)",
+        "Concierge Gateway"
+      ],
+      "Status": [
+        "Queued",
+        "Done",
+        "Failed"
+      ]
     }
   },
-
   "areas": {
     "_comment": "Area name (without emoji prefix) -> FULL URL of the Area row in Areas DB. Canonical: Career, Health, Sport, Money, Family, Content, Other. Areas DB is canonical and effectively never changes, so this map can be cached indefinitely.",
     "Career": "https://www.notion.so/Career-0000000000000000000000000000000a",
@@ -82,7 +143,6 @@
     "Content": "https://www.notion.so/Content-0000000000000000000000000000000f",
     "Other": "https://www.notion.so/Other-00000000000000000000000000000010"
   },
-
   "reviews": {
     "_comment": "Cache of the active Reviews period row. If `periodLabel` still matches the current period, reuse `id` and skip the lookup; otherwise find/create the row and refresh both fields.",
     "currentRow": {
