@@ -95,6 +95,13 @@ That is what makes this read both cheap and complete.
    surfaced here is an unfiled `New` capture. So:
    - **Classify each row from its `Note` title** via routing.md (Steps 2–3). No confirmation fetch —
      this removes one `notion-fetch` per row, the single largest cost of a run.
+   - **Note blocks (title starts with "🗒 ") → one task, never re-split.** `roll-day` sweeps a
+     multi-line Daily-notes block as ONE Inbox row whose `Note` begins with "🗒 " (a handle) and whose
+     **full text is in the row body**. Detect it by that prefix in the search title and file it via
+     Step 3's **note-block short-circuit** as a single item — do **NOT** run the per-line routing table
+     over its contents. To carry the full notes into the task, `notion-fetch` **this one row** to read
+     its body (an allowed, scoped exception to the no-fetch rule, like the leftover guard). The full
+     text is also preserved verbatim when the row is moved to Inbox Archive (Step 4).
    - **Detect expenses by cue, not by a pre-set `Type`.** routing.md row 8 (spent/paid/$/потратил/
      оплатил/купил за/руб/грн/…) identifies expense captures from the `Note` text itself; the old
      reliance on a pre-set `Type=expense` is dropped (it is re-derived from the cue and so is
@@ -121,6 +128,23 @@ wrong item on a weak match. Instead, route every completion note straight to **N
 hand. No search, no fetch, no auto-close.
 
 ## Step 3 — classify & FILE new items (actually write the row)
+
+**Note-block short-circuit — do this BEFORE the routing table.** If the row's `Note` starts with
+"🗒 " it is a swept multi-line note block (a meeting note, a list). **File it as ONE task and skip the
+routing table entirely** — never re-classify it line-by-line. Strip the "🗒 " marker, then
+`notion-create-pages` ONE row in **Tasks** (`parent` = Tasks `data_source_id` from the registry):
+- title = the note block's **first non-empty line** with the "🗒 " marker stripped (a concise handle);
+- **`content` (task body) = the full block text** read from the Inbox row body, so the captured notes
+  travel into the task in context (the same full text also remains on the archived Inbox row);
+- `date:Do date:start` = **tomorrow** (today + 1 day) — the block is queued to be processed tomorrow;
+- `Tag = Triage`;
+- `Priority` = the **highest-ranked value** in the cached Tasks `Priority` `selects` (the top option —
+  e.g. `Top`); if Tasks has no `Priority` field in the cache, omit it;
+- `Type` = `Work` if the text has a clear work cue, else `Personal`.
+Verify the row, then set the Inbox row `Type=task`, `Status=Sorted`, `Target="Tasks/<handle>"` and
+archive it (Step 4). This realises "a meeting/notes block becomes **one** high-priority task to process
+tomorrow," never a pile of mis-parsed fragments. For every other row (no "🗒 " prefix) continue below.
+
 1. **Assign a `Type` with `routing.md` first** — apply the cue table top-to-bottom, first match wins.
    Only if a note matches **no** row, fall back to model judgement per `taxonomy.md`; still unclear →
    `unsure`. Distinguish `goal` (a committed, measurable outcome with a horizon) from `idea` (an

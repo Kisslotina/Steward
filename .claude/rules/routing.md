@@ -23,7 +23,7 @@ Cues are substrings/stems, case-insensitive, matched in English and Russian (the
 | # | Type | Cue stems (EN / RU) | Then set |
 |---|---|---|---|
 | 1 | completion | `done`, `closed`, `finished`, `completed` / `сделал`, `закрыл`, `завершил`, `выполнил`, `готово` | not a new record — route to **Not Recognized** ("completion note — close manually"); no auto-match/close (taxonomy.md) |
-| 2 | event | `meeting`, `call`, `appointment`, `at 3pm`, clock time / `встреча`, `созвон`, `записан`, `в 15:00`, `завтра в` | -> **Outbox** (Type=calendar, Handler=Steward (MCP)) |
+| 2 | event | a meeting/call cue **with an explicit time** — `meeting`, `call`, `appointment` **+ a clock time** (`at 3pm`, `15:00`), `завтра в 10` / `встреча`, `созвон`, `записан` **+ время** (`в 15:00`), `завтра в` | -> **Outbox** (Type=calendar, Handler=Steward (MCP)). **No time present → not an event; falls to row 10 (task).** |
 | 3 | review | `review`, `reflection`, `weekly recap`, `looking back` / `итоги`, `ретро`, `рефлексия`, `обзор недели` | -> **Reviews** (append to matching area column) |
 | 4 | reminder | `remind`, `remember to`, `don't forget` / `напомни`, `напоминание`, `не забыть` | -> **Tasks** (Tag=Reminder + date) |
 | 5 | goal | `goal`, `by end of year`, `this quarter`, measurable target + horizon / `цель`, `к концу года`, `за месяц`, `похудеть до`, `накопить` | -> **Goals** (Horizon, Area, Target date) |
@@ -41,6 +41,19 @@ Notes:
   phrased ambitiously. When in doubt between the two, prefer `idea`.
 - A note matching **no** row (1-10) is **not** a task by default — send it to model judgement, then
   `unsure` -> **Not Recognized**. Never let the catch-all swallow genuinely unclear input.
+- `event` (row 2) requires a **time/clock reference**. A bare `call`/`meeting`/`созвон` with **no
+  time** ("Call Dominik about ZUS") is **not** an event — it falls through to a **task** (row 10).
+  Only enqueue to Outbox (calendar) when a time is present.
+
+## Note blocks (multi-line captures) — handled **before** the cue table
+
+A capture whose `Note` starts with **`🗒 `** is a multi-line note block swept whole from Today's Daily
+notes (a meeting note, a list — blocks are separated by `---` dividers on the Today page). This is a
+**structural marker** set at sweep time, not a content cue, so it **takes precedence over rows 1–10**:
+`sort-inbox` files it as **one** Tasks row (`Do date = tomorrow`, `Tag = Triage`, highest `Priority`,
+`Type` = Work/Personal by cue) and does **not** run the cue table over its contents — so a long note
+is never fragmented into many mis-classified rows. The full block text is preserved on the archived
+Inbox row. See `sort-inbox` Step 3 (note-block short-circuit).
 
 ## Ideas subtype (`Ideas.Type`) — when Type=idea
 
