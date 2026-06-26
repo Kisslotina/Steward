@@ -42,10 +42,26 @@ behind the cap. Even fewer than 25 is not a stopping signal on its own — re-re
    `Inbox` (the source), `Inbox Archive` (where filed rows are moved, Step 4), and the targets
    `Tasks`, `Goals`, `Ideas`, `Knowledge`, `Reviews`, `Not Recognized`, `Outbox`. A base whose key is
    absent from the registry is treated as "does not exist" → items for it go to **Not Recognized**.
-6. **Cache schemas once.** `notion-fetch` the schema of each destination you will actually write this
-   run, plus `Areas DB` once (build a map: Area name → page ID, ignoring emoji prefixes). Reuse these
-   for every item — never re-fetch a base schema or the Areas map per item. This, with the routing
-   table, is what keeps the sort phase cheap.
+6. **Load the write-contract from `schema.cache.json` — do NOT fetch base schemas.** This
+   git-ignored cache (written by `bootstrap-notion`; shape per `schema.cache.example.json`) holds, per
+   destination base: `title` (the title-field name), `dateFields`, and `selects` (allowed select
+   values), plus the top-level `areas` map (Area name → **full Notion URL**) and `reviews.currentRow`.
+   Read it once and reuse it for every write this run — **never `notion-fetch` a base schema or the
+   Areas DB to rediscover field names, date formats, select values, or Area URLs.** This, with the
+   routing table, is what keeps the sort phase cheap and is what prevents the failed-write retry loops
+   (wrong title field, bare date, invalid select value, bare-id relation).
+   - **The Areas map is permanent.** Areas DB is canonical and effectively never changes, so the
+     `areas` URLs are reused indefinitely across runs — never re-fetch them.
+   - **Self-heal a missing or stale cache, once.** If `schema.cache.json` is absent, or a write later
+     errors because the cache disagrees with Notion ("Property … not found", "Date type must be
+     expanded", "Invalid select value", "Invalid agent URL"), discover the affected base's schema
+     **once** via `notion-fetch`, **write the corrected contract back to `schema.cache.json`**, then
+     keep reading from the file. Discover at most once per base per run — never per item.
+   - **Reviews period shortcut (skip the weekly search).** Before searching Reviews for the current
+     period row, check `reviews.currentRow`: if its `periodLabel` equals the current period label,
+     **reuse its `id` with no search and no fetch**. Only when the label does not match (the period
+     rolled over) do you find/create the period row and then update `reviews.currentRow` (`id` +
+     `periodLabel`) in `schema.cache.json`.
 
 ## Step 1 — load the work list: every Inbox row with Status=New
 Goal: get EVERY `Status=New` row, regardless of capture language or blank body, at a cost that does
@@ -155,7 +171,8 @@ a fresh read confirms no `New` rows remain (excluding expense rows, which stay `
 ## Rules
 - Resolve every base ID from `bases.local.json`. No invented names, no hardcoded IDs.
 - **Classify with `routing.md` first**; only deliberate on notes that match no rule.
-- **Read each base schema and the Areas map once per run**, never per item.
+- **Read field names, formats, select values, and Area URLs from `schema.cache.json`** — never
+  `notion-fetch` a base schema or the Areas DB to rediscover them. Self-heal the cache once if stale.
 - **Never call `query_data_sources` or `query_database_view`** — paid (Enterprise / Business). Read
   via `notion-search` (≤25, no pagination) + per-page `notion-fetch`; drain any backlog with the
   batch loop (Step 5), which works because filed rows are moved out to Inbox Archive (Step 4).
