@@ -23,7 +23,7 @@ Areas DB ← Goals / Projects / Ideas / Knowledge · Goals → Area · Projects 
 
 ## Statuses
 - Inbox.Status: `New → Sorted` (then the row is moved to **Inbox Archive**, not deleted)
-- Tasks: `Done` (checkbox), Executor `Me / Auto (Steward)`, Tag `Triage / From Daily / Reminder / Shopping`
+- Tasks: `Done` (checkbox), Executor `Me / Auto (Steward)`, Tag `Triage / From Daily / Reminder / Shopping`, `Deferred` (number — count of manual pushes via the `→ Tomorrow` / `→ Next Week` defer buttons; `roll-day` flags `>= 3`)
 - Projects.Status: `Backlog · Active · On hold · Done`
 - Goals.Status: `Not started · In progress · Done`
 - Ideas.Type: `Content · Startup · Other` (subtype set by the sorter) · Ideas.Status: `New · In progress · Drafted · Posted`

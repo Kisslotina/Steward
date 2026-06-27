@@ -104,11 +104,19 @@ The default-date rule also lives there: a swept task with no date gets `Do date 
 are filed there as a single high-priority task dated **tomorrow** (`Tag = Triage`), never split. See
 `.claude/skills/sort-inbox/SKILL.md`. Wait for it to finish before Phase 4.
 
-### 4. carry-forward — do nothing to dates (verify only)
+### 4. carry-forward — do nothing to dates (verify + surface chronic deferrals)
 Undone past tasks **resurface on their own**: the Today board filters `Done = false AND Do date <=
 today`, so anything still open with a past `Do date` is already shown. **Do not touch dates** —
 **preserve each task's original `Do date`** as a slippage signal (how long it has been overdue).
 `notion-fetch` the board only to **count** the overdue (carried) tasks for the report. Make no writes.
+
+The user pushes tasks they do not want today off the board with the **defer buttons** (`→ Tomorrow` /
+`→ Next Week`), which move `Do date` into the future and bump the task's **`Deferred`** counter. That is
+a deliberate, healthy action — **roll-day never undoes it and never auto-defers anything itself.** But
+a task pushed again and again is a signal it should be dropped, not done. So while counting the board,
+also read each shown task's `Deferred` value and **flag any task with `Deferred >= 3`** for the report
+(title + count) as "chronically deferred — consider dropping or rescoping." **Flag only — make no
+writes**; the user decides what to do with it.
 
 ### 5. refresh — empty the Daily-notes area for the new day
 Only **after** Phase 2 confirmed every swept block reached the Inbox, `notion-update-page` the `Today`
@@ -144,6 +152,7 @@ Report, for this run:
 - **sweep → sort** — blocks swept into Inbox and handed to `sort-inbox` (count; note how many were
   multi-line note blocks); per-item outcomes (filed / closed / enqueued to Outbox / Not Recognized /
   moved to Inbox Archive) come from `sort-inbox`'s own report.
-- **carry-forward** — overdue tasks carried (count).
+- **carry-forward** — overdue tasks carried (count); **chronically deferred** tasks flagged
+  (`Deferred >= 3`): title + defer count, listed as "consider dropping" (no writes made).
 - **errors / skips** — any block that could not be marked "✅" (and where the run stopped), a missing
   registry / `Today` key, or any failed write.
