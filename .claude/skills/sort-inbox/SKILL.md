@@ -165,6 +165,14 @@ tomorrow," never a pile of mis-parsed fragments. For every other row (no "🗒 "
    `append` command: `notion-fetch` the period row, read the current value of the matching area
    column, and `notion-update-page` with the FULL new value (old text + newline + the new line). Do
    not just describe the write — perform it.
+   **`Type` = Work / Personal (tasks and reminders) — REQUIRED, never blank.** When filing a `task`
+   or `reminder` to Tasks, ALWAYS set the Tasks `Type` select: `Work` if the note has a clear work
+   cue (job, team, client, project/code, meeting, report, a named colleague), else `Personal`. This
+   is the **same rule the note-block short-circuit uses** — apply it to every task, not just note
+   blocks. The Today board is **grouped by `Type`**, so a task with a blank `Type` lands in an
+   unlabeled "(No Type)" group and is invisible under Work / Personal — that is a filing failure, not
+   a cosmetic gap. `Type` must be one of the cached Tasks `selects` values (`Work` / `Personal`);
+   never leave it empty and never invent a third value.
    **Do date (tasks and reminders):** when filing a `task` or `reminder` to Tasks, set `Do date`
    as follows: if the note contains an explicit date or time reference, parse and use it; otherwise
    set `Do date = today` and add **`Tag = Triage`** (in addition to any other tag such as
@@ -264,6 +272,8 @@ no longer linger as `New` — there is no expense exclusion to carry anymore.)
   filed rows are moved out to Inbox Archive (Step 4). Per-page `notion-fetch` is now used only for the
   rare leftover reconciliation (Step 1.3 guard).
 - When marking an Inbox row `Sorted`, always write its decided `Type` back — never leave it blank.
+- **Every Tasks row gets a `Type` (`Work` / `Personal`)** — required on regular tasks and reminders,
+  not just note blocks. The Today board groups by `Type`; a blank-`Type` task is invisible there.
 - On any base with an Area relation, always set `Area`; fall back to **Other** when no clear match.
 - Don't split partially recognized: file whole OR Not Recognized with a reason.
 - **Never delete records** — only change Status and **move** filed rows to Inbox Archive.
