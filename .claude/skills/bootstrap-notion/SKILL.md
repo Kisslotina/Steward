@@ -70,9 +70,12 @@ Create each as a database under the parent; put the emoji in the title (e.g. `�
       typed here is swept into Inbox by the daily routine (`roll-day`);
     - a divider;
     - an inline **linked view of Tasks** (the day board). Configure it with the view DSL:
-      `GROUP BY "Type"; FILTER "Done" = "false" AND "Do date" <= "today"; SORT BY "Do date" ASC,
-      "Priority" ASC; SHOW "Task", "Do date", "Priority", "Tag", "Type"` (relative dates are quoted,
-      e.g. `"today"`).
+      `GROUP BY "Type"; FILTER "Done" = "false"; SORT BY "Do date" ASC,
+      "Priority" ASC; SHOW "Task", "Do date", "Priority", "Tag", "Type"`
+      ⚠️ **Do NOT add the `Do date <= today` filter via DSL** — the Notion MCP connector treats
+      `"today"` as a literal string and produces an "Invalid DateTime" broken filter. After creating
+      the view, instruct the user to add the date filter manually in the Notion UI:
+      Filter → Do date → Start date → Is on or before → **Today** (the relative option, not Custom date).
       Work / Personal come from the grouping; `Triage` and overdue/carried items are surfaced by the
       `Tag` colour and the date sort (overdue rises to the top). Leave the page otherwise EMPTY of
       personal data — `roll-day` fills and handles it daily.

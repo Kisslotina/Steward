@@ -173,6 +173,12 @@ tomorrow," never a pile of mis-parsed fragments. For every other row (no "🗒 "
    unlabeled "(No Type)" group and is invisible under Work / Personal — that is a filing failure, not
    a cosmetic gap. `Type` must be one of the cached Tasks `selects` values (`Work` / `Personal`);
    never leave it empty and never invent a third value.
+   **`Priority` (tasks and reminders) — never blank, default to normal.** If the note carries an
+   explicit urgency cue (e.g. "urgent", "asap", "important", "срочно", "важно"), set `Priority` to the
+   **highest-ranked** value in the cached Tasks `Priority` `selects` (the top option — e.g. `Top`).
+   Otherwise set `Priority` to the **normal default = the lowest-ranked value** in that `selects` list
+   (e.g. `Secondary`) — never leave it empty. If Tasks has no `Priority` field in the cache, omit it.
+   (Note blocks are the one exception — they always take the top `Priority`, per the short-circuit.)
    **Do date (tasks and reminders):** when filing a `task` or `reminder` to Tasks, set `Do date`
    as follows: if the note contains an explicit date or time reference, parse and use it; otherwise
    set `Do date = today` and add **`Tag = Triage`** (in addition to any other tag such as
@@ -274,6 +280,9 @@ no longer linger as `New` — there is no expense exclusion to carry anymore.)
 - When marking an Inbox row `Sorted`, always write its decided `Type` back — never leave it blank.
 - **Every Tasks row gets a `Type` (`Work` / `Personal`)** — required on regular tasks and reminders,
   not just note blocks. The Today board groups by `Type`; a blank-`Type` task is invisible there.
+- **Every Tasks row gets a `Priority`** — never blank. Use the top value on an explicit urgency cue,
+  otherwise the normal default (the lowest-ranked `Priority` value, e.g. `Secondary`). Note blocks
+  always take the top value.
 - On any base with an Area relation, always set `Area`; fall back to **Other** when no clear match.
 - Don't split partially recognized: file whole OR Not Recognized with a reason.
 - **Never delete records** — only change Status and **move** filed rows to Inbox Archive.
