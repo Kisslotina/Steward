@@ -48,7 +48,7 @@ Tasks, swept notes live in Inbox.
 | Tasks | Task, Done, Do date, Priority, Type (Work/Personal), Tag, Assignee, Executor (Me/Auto) | → Project |
 | Ideas | Idea, Type (Content/Startup/Other), Status (New/In progress/Drafted/Posted), Notes | → Area (optional) |
 | Knowledge | Title, Notes | → Area (optional) — home for `reference` notes/facts |
-| Reviews | Period (title), Date + text columns: Health/Sport/Career/Work/Money/Family | wide format; `review` notes append to the current period row |
+| Reviews | Note (title), Type (Health/Sport/Career/Work/Money/Family/Other), Date | long format; each `review` note is one new row — add many per area over time |
 
 > **Ideas** is the seedbed for any idea — its `Type` subtype splits Content / Startup / Other.
 > The `Drafted/Posted` statuses are mainly for `Type=Content`; leave them blank for

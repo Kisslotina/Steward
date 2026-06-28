@@ -46,15 +46,14 @@ surfaces the next ≤25. The loop and its exit condition are defined once, in **
 4. **Load the write-contract from `schema.cache.json` — do NOT fetch base schemas.** This
    cache (written by `bootstrap-notion`; shape per `schema.cache.example.json`) holds, per
    destination base: `title` (title-field name), `dateFields`, and `selects` (allowed select
-   values), plus the top-level `areas` map (Area name → **full Notion URL**) and
-   `reviews.currentRow`. Read it once and reuse it for every write this run — **never
+   values), plus the top-level `areas` map (Area name → **full Notion URL**). Read it once and
+   reuse it for every write this run — **never
    `notion-fetch` a base schema or the Areas DB** to rediscover field names, date formats,
    select values, or Area URLs. This is what prevents failed-write retry loops.
    - The Areas map is permanent (Areas DB is canonical) — reuse the URLs indefinitely.
-   - **Reviews period shortcut.** Before searching Reviews for the current period row, check
-     `reviews.currentRow`: if its `periodLabel` equals the current period label, **reuse its
-     `id` with no search and no fetch.** Only when the label does not match (period rolled
-     over) do you find/create the period row and update `reviews.currentRow` in the cache.
+   - **Reviews is a plain create-row.** A `review` note is filed as ONE new Reviews row
+     (`Note` = the text, `Type` = the area, `Date` = today) — no period row, no search, no
+     read-modify-write. Use the cached `Reviews.selects.Type` values for `Type`.
    - If the cache is missing or a write later disagrees with Notion → **self-heal once**, per
      `references/recovery.md` §1.
 
@@ -105,7 +104,7 @@ user close the real item by hand.
 ## Step 3 — classify & FILE new items (actually write the row)
 
 Read `references/notion-call-forms.md` once before writing — it holds the exact, verbatim
-call shapes (`notion-create-pages`, dates, Area URL, selects, Reviews read-modify-write).
+call shapes (`notion-create-pages`, dates, Area URL, selects, Reviews create-row).
 
 **Note-block short-circuit — do this BEFORE the routing table.** If the row's `Note` starts
 with "🗒 " it is a swept multi-line note block. **File it as ONE task and skip the routing
@@ -140,8 +139,9 @@ and archive it (Step 4). For every other row (no "🗒 " prefix) continue below.
    - **`Area`** on bases that have it (Goals, Ideas, Knowledge, Projects): set from the cached
      `areas` map and the Area cues in `routing.md` (full Notion URL, match on name ignoring
      emoji). No clear match → **Other**, never empty.
-   - **`review`:** find/create the current period row (reuse `reviews.currentRow` per Step 0),
-     then append by **read-modify-write** — Reviews has no `append` command.
+   - **`review`:** create ONE new Reviews row — `Note` (title) = the text, `Type` = the area
+     from the Review-type cues in `routing.md` (cached `Reviews.selects.Type`; no match →
+     `Other`), `date:Date:start` = today. A plain `notion-create-pages`, no read-modify-write.
 4. **Verify** the new row exists (it returns a URL/ID), THEN update the source Inbox row: set
    `Type` to what you assigned in 3.1, `Status=Sorted`, `Target="<RealBaseName>/<title>"`.
    Writing `Type` back is REQUIRED — a `Sorted` row with blank `Type` means the sort never

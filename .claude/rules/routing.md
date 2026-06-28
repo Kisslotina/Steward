@@ -24,7 +24,7 @@ Cues are substrings/stems, case-insensitive, matched in English and Russian (the
 |---|---|---|---|
 | 1 | completion | `done`, `closed`, `finished`, `completed` / `сделал`, `закрыл`, `завершил`, `выполнил`, `готово` | not a new record — route to **Not Recognized** ("completion note — close manually"); no auto-match/close (taxonomy.md) |
 | 2 | event | a meeting/call cue **with an explicit time** — `meeting`, `call`, `appointment` **+ a clock time** (`at 3pm`, `15:00`), `завтра в 10` / `встреча`, `созвон`, `записан` **+ время** (`в 15:00`), `завтра в` | -> **Outbox** (Type=calendar, Handler=Steward (MCP)). **No time present → not an event; falls to row 10 (task).** |
-| 3 | review | `review`, `reflection`, `weekly recap`, `looking back` / `итоги`, `ретро`, `рефлексия`, `обзор недели` | -> **Reviews** (append to matching area column) |
+| 3 | review | `review`, `reflection`, `weekly recap`, `looking back` / `итоги`, `ретро`, `рефлексия`, `обзор недели` | -> **Reviews** (ONE new row: `Type` = the area per the Review-type cues below, `Note` = the text, `Date` = today) |
 | 4 | reminder | `remind`, `remember to`, `don't forget` / `напомни`, `напоминание`, `не забыть` | -> **Tasks** (Tag=Reminder + date) |
 | 5 | goal | `goal`, `by end of year`, `this quarter`, measurable target + horizon / `цель`, `к концу года`, `за месяц`, `похудеть до`, `накопить` | -> **Goals** (Horizon, Area, Target date) |
 | 6 | idea | `idea:`, `what if`, `concept`, `startup`, `video about`, `post about`, `blog` / `идея`, `а что если`, `стартап`, `снять видео`, `пост про`, `проект про` | -> **Ideas** (set subtype, see below) |
@@ -62,6 +62,28 @@ Inbox row. See `sort-inbox` Step 3 (note-block short-circuit).
 | Content | `video`, `post`, `blog`, `youtube`, `reel`, `article` / `видео`, `пост`, `ролик`, `статья` |
 | Startup | `startup`, `business`, `product`, `app`, `saas`, `venture` / `стартап`, `бизнес`, `продукт`, `приложение`, `проект про` |
 | Other | anything else |
+
+## Review type (`Reviews.Type`) — when Type=review
+
+A review note becomes **ONE new Reviews row** (`Note` = the text, `Date` = today). Pick `Type` —
+the area the reflection is about — by the cues below, **first match wins**, tested top to bottom.
+These options match the live Reviews `Type` select exactly; no clear match -> **Other** (never
+empty). Many notes about the same area over a month are just many rows with the same `Type` —
+there is no per-period row and no merging.
+
+| Type | Cues (EN / RU) |
+|---|---|
+| Health | `health`, `doctor`, `sleep`, `diet`, `fasting`, `allergy` / `здоровье`, `врач`, `сон`, `питание`, `голодание`, `самочувствие` |
+| Sport | `run`, `gym`, `training`, `marathon`, `workout` / `бег`, `зал`, `тренировка`, `спорт`, `пробежка` |
+| Money | `money`, `budget`, `invest`, `savings`, `salary`, `spending` / `деньги`, `бюджет`, `инвест`, `накоплен`, `зарплата`, `траты` |
+| Family | `family`, `wife`, `kids`, `parents`, `home` / `семья`, `жена`, `дети`, `родители`, `дом` |
+| Career | `career`, `interview`, `promotion`, `cv`, `resume`, `job search` / `карьера`, `собеседование`, `повышение`, `резюме`, `поиск работы` |
+| Work | `work`, `project`, `task`, `deadline`, `client`, `meeting`, `standup`, `content`, `blog`, `channel` / `работа`, `проект`, `задача`, `дедлайн`, `клиент`, `совещание`, `контент`, `блог`, `канал` |
+| Other | no clear match above |
+
+> `Career` vs `Work`: **Career** is professional growth — interviews, promotions, job hunting,
+> the resume. **Work** is day-to-day execution — projects, tasks, deadlines, meetings, clients,
+> content output. Career is tested first; a generic work cue falls to **Work**.
 
 ## Area cues (set `Area` on Goals / Ideas / Knowledge / Projects)
 
